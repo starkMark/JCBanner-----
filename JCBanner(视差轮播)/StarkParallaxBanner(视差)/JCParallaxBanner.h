@@ -49,6 +49,8 @@ typedef enum {
 @property (nonatomic, assign) BOOL needParallax;
 
 /** 自动滚动间隔时间,默认 5s */
+//@property (nonatomic, assign) CGFloat autoInterval;
+/** 自动滚动间隔时间,默认 5s */
 @property (nonatomic, assign) CGFloat autoScrollInterval;
 
 /** 网络图片 URL字符串数组 */
@@ -65,9 +67,6 @@ typedef enum {
 
 /** 占位图，用于网络未加载到图片时 */
 @property (nonatomic, strong) UIImage *placeholderImage;
-
-/** 当 imageURLArray 为空时的背景图 */
-@property (nonatomic, weak) UIImageView *backgroundImageView;
 
 /** 视差模式 */
 @property (nonatomic, assign) JCParallaxType parallaxType;

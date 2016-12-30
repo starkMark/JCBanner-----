@@ -40,6 +40,8 @@
 @property (nonatomic, strong) JCParallaxCollectionLayout *parallaxLayout;
 
 @property (nonatomic, strong) UIScrollView *scrollView;// 父视图
+/** 当 imageURLArray 为空时的背景图 */
+@property (nonatomic, strong) UIImageView *backgroundImageView;
 
 @end
 
@@ -55,7 +57,9 @@
 
 + (instancetype)parallaxBannerViewWithFrame:(CGRect)frame placeholderImage:(UIImage *)placeholderImage imageURLArray:(NSArray *)imageURLArray{
     JCParallaxBanner *parallaxBanner = [[JCParallaxBanner alloc]initWithFrame:frame];
-    parallaxBanner.imageURLArray = [NSMutableArray arrayWithArray:imageURLArray];
+    if (imageURLArray && imageURLArray.count) {
+      parallaxBanner.imageURLArray = [NSMutableArray arrayWithArray:imageURLArray];
+    }
     if (placeholderImage) {
         parallaxBanner.placeholderImage = placeholderImage;
     }
@@ -76,11 +80,6 @@
     }
     
     [self initPageControl];
-    
-    if (!self.backgroundImageView) {
-        self.backgroundImageView.frame = self.bounds;
-    }
-    
 
 }
 
@@ -281,11 +280,18 @@
         // 记录UIScrollView
         _scrollView = (UIScrollView *)newSuperview;
     }
+  
+  //解决当父View释放时，当前视图因为被Timer强引用而不能释放的问题
+//  if (!newSuperview) {
+//    [_parallaxTimer invalidate];
+//    _parallaxTimer = nil;
+//  }
+
 }
 
 - (void)automaticScroll{
     
-    if (_parallaxTimer == 0) return;
+    if (_totalItemsCount == 0) return;
     
     int currentIndex = _parallaxCollectionView.contentOffset.x / _parallaxLayout.parallaxItemSize.width;
     if (!_needParallax) {
@@ -338,16 +344,16 @@
 
 #pragma mark - setter
 - (void)setImageURLArray:(NSMutableArray *)imageURLArray{
+  if (imageURLArray.count) {
     _imageURLArray = imageURLArray;
-    
     NSMutableArray *images = [NSMutableArray arrayWithCapacity:imageURLArray.count];
     for (int i = 0; i < imageURLArray.count; i++) {
-        UIImage *image = [[UIImage alloc] init];
-        [images addObject:image];
+      UIImage *image = [[UIImage alloc] init];
+      [images addObject:image];
     }
     self.imageViewArray = images;
     [self loadImageWithImageURLsGroup:imageURLArray];
-    
+  }
 }
 
 - (void)setImageViewArray:(NSMutableArray *)imageViewArray{
@@ -369,12 +375,14 @@
 /* placeholderImage */
 - (void)setPlaceholderImage:(UIImage *)placeholderImage{
     _placeholderImage = placeholderImage;
-    
-    if (!self.backgroundImageView) {
-        UIImageView *imageView = [UIImageView new];
-        [self insertSubview:imageView belowSubview:self.parallaxCollectionView];
-        self.backgroundImageView.frame = self.bounds;
-    }
+
+  if (!_backgroundImageView) {
+    _backgroundImageView = [[UIImageView alloc]init];
+    _backgroundImageView.frame = _parallaxCollectionView.bounds;
+    [_parallaxCollectionView addSubview:_backgroundImageView];
+  }
+    self.backgroundImageView.image = placeholderImage;
+
 }
 
 #pragma mark - 图片缓存
